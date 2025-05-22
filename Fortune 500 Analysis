@@ -71,7 +71,7 @@ FROM fortune_companies;
 -- Categorize companies by tenure quality using a CASE expression
 SELECT company_name, avg_employee_tenure,
 CASE
-	WHEN avg_employee_tenure >=7 THEN "High Quality"
+  WHEN avg_employee_tenure >=7 THEN "High Quality"
   WHEN avg_employee_tenure >=5 THEN "Decent Quality"
   ELSE "Poor Quality"
 END AS tenure_quality
@@ -89,7 +89,7 @@ ORDER BY AVG(maternity_leave_weeks) desc;
 -- List companies that either offer less than 18 days of PTO or do not provide healthcare benefits 
 SELECT company_name, paid_time_off_days, healthcare_benefits,
 CASE
-	WHEN paid_time_off_days<18 AND healthcare_benefits=0 THEN "Both"
+  WHEN paid_time_off_days<18 AND healthcare_benefits=0 THEN "Both"
   WHEN paid_time_off_days<18 THEN "<18 Days of PTO"
   WHEN healthcare_benefits=0 THEN "No Healthcare Benefits"
 END AS "Condition"
