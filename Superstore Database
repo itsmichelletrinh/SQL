@@ -28,6 +28,8 @@ VALUES
     
 -- © Copyright 2025 Break Into Tech  --
 
+-- My Code Below!
+
 -- Order items by price
 SELECT item_name, price
 FROM superstore
