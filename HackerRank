@@ -151,3 +151,48 @@ Q: Query the total population of all cities in CITY where District is California
 
 SELECT SUM(population) FROM city
 WHERE district = "California";
+
+Q: Query the average population of all cities in CITY where District is California.
+
+SELECT AVG(population) AS Average_Population 
+FROM city
+WHERE district = "California";
+
+Q: Query the average population for all cities in CITY, rounded down to the nearest integer.
+
+SELECT ROUND(AVG(population), 0) FROM city;
+
+Q: Query the sum of the populations for all Japanese cities in CITY. The COUNTRYCODE for Japan is JPN.
+
+SELECT SUM(population) FROM city
+WHERE countrycode = "JPN";
+
+Q: Query the difference between the maximum and minimum populations in CITY.
+
+SELECT MAX(population) - MIN(population) FROM city;
+
+Q: Samantha was tasked with calculating the average monthly salaries for all employees in the EMPLOYEES table, but did not realize her keyboard's key was broken until after completing the calculation. She wants your help finding the difference between her miscalculation (using salaries with any zeros removed), and the actual average salary.
+Write a query calculating the amount of error (i.e.:  average monthly salaries), and round it up to the next integer.
+
+SELECT CEILING(
+    AVG(salary) - 
+    AVG(CAST(REPLACE(CAST(salary AS CHAR(6)), "0", "") AS UNSIGNED))
+)
+FROM employees;
+
+Q: We define an employee's total earnings to be their monthly salary x months worked, and the maximum total earnings to be the maximum total earnings for any employee in the Employee table. Write a query to find the maximum total earnings for all employees as well as the total number of employees who have maximum total earnings. Then print these values as 2 space-separated integers.
+
+SELECT MAX(salary * months) AS Total_Earnings, 
+(SELECT COUNT(*) 
+ FROM employee
+ WHERE salary * months = 
+  (SELECT MAX(salary * months) FROM employee)
+ )
+FROM employee;
+
+Q: Query the following two values from the STATION table:
+The sum of all values in LAT_N rounded to a scale of 2 decimal places.
+The sum of all values in LONG_W rounded to a scale of 2 decimal places.
+
+SELECT ROUND(SUM(lat_n), 2), ROUND(SUM(long_w), 2)
+FROM station;
