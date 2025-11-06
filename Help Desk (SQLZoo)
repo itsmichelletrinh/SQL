@@ -62,3 +62,13 @@ Q: For each customer show: Company name, contact name, number of calls where the
 Q: For each shift show the number of staff assigned. Beware that some roles may be NULL and that the same person might 
 have been assigned to multiple roles (The roles are 'Manager', 'Operator', 'Engineer1', 'Engineer2').
 
+Q: Caller 'Harry' claims that the operator who took his most recent call was abusive and insulting. Find out who took the 
+call (full name) and when.
+
+SELECT s.first_name, s.last_name, DATE_FORMAT(i.call_date, '%Y-%m-%d %H:%i:%s') AS call_date
+FROM Issue AS i
+JOIN Staff AS s ON i.taken_by = s.staff_code
+JOIN Caller AS c ON i.caller_id = c.caller_id 
+WHERE c.first_name LIKE "%Harry%"
+ORDER BY call_date DESC
+LIMIT 1;
