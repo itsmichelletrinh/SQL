@@ -113,3 +113,21 @@ LIMIT 29
 SELECT (SUM(nc) / (SELECT COUNT(call_ref) FROM Issue)) * 100 AS t20pc
 FROM active_20pc_cte 
 
+Q: Maximal usage. If every caller registered with a customer makes at least one call in one day then that customer 
+has "maximal usage" of the service. List the maximal customers for 2017-08-13.
+
+WITH caller_count_cte AS 
+(
+SELECT company_name, COUNT(DISTINCT Issue.caller_id) AS caller_count
+FROM Customer
+JOIN Caller ON Customer.company_ref = Caller.company_ref 
+JOIN Issue ON Caller.caller_id = Issue.caller_id 
+WHERE DATE_FORMAT(call_date, '%Y-%m-%d') LIKE "2017-08-13"
+GROUP BY company_name
+)
+SELECT Customer.company_name, caller_count, COUNT(DISTINCT Caller.caller_id) AS registered_callers
+FROM Customer
+JOIN Caller ON Customer.company_ref = Caller.company_ref
+JOIN caller_count_cte ON Customer.company_name = caller_count_cte.company_name
+GROUP BY company_name, caller_count
+HAVING caller_count = registered_callers
