@@ -151,8 +151,3 @@ JOIN Caller ON Customer.company_ref = Caller.company_ref
 JOIN caller_count_cte ON Customer.company_name = caller_count_cte.company_name
 GROUP BY company_name, caller_count
 HAVING caller_count = registered_callers
-
-Q: Consecutive calls occur when an operator deals with two callers within 10 minutes. Find the longest sequence of 
-consecutive calls – give the name of the operator and the first and last call date in the sequence.
-
-
