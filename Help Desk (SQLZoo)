@@ -57,8 +57,6 @@ FROM Caller AS c
 LEFT JOIN Issue AS i ON c.caller_id = i.caller_id
 WHERE call_ref IS NULL;
 
-Q: For each customer show: Company name, contact name, number of calls where the number of calls is fewer than 5.
-
 Q: For each shift show the number of staff assigned. Beware that some roles may be NULL and that the same person might 
 have been assigned to multiple roles (The roles are 'Manager', 'Operator', 'Engineer1', 'Engineer2').
 
@@ -113,6 +111,28 @@ LIMIT 29
 SELECT (SUM(nc) / (SELECT COUNT(call_ref) FROM Issue)) * 100 AS t20pc
 FROM active_20pc_cte 
 
+Q: Annoying customers. Customers who call in the last five minutes of a shift are annoying. Find the most active 
+customer who has never been annoying.
+
+SELECT company_name, COUNT(call_ref) AS abna
+FROM Customer AS cust
+JOIN Caller AS c ON cust.company_ref = c.company_ref
+JOIN Issue AS i ON c.caller_id = i.caller_id
+WHERE i.caller_id NOT IN 
+(
+SELECT i.caller_id
+FROM Issue AS i
+JOIN Staff AS s ON i.taken_by = s.staff_code
+JOIN Shift AS sh ON s.staff_code = sh.operator
+JOIN Shift_type AS st ON sh.shift_type = st.shift_type
+WHERE STR_TO_DATE(DATE_FORMAT(i.call_date, '%H:%i'), '%H:%i')
+      BETWEEN DATE_SUB(STR_TO_DATE(st.end_time, '%H:%i'), INTERVAL 5 MINUTE)
+          AND STR_TO_DATE(st.end_time, '%H:%i')
+)
+GROUP BY company_name
+ORDER BY abna DESC
+LIMIT 1
+
 Q: Maximal usage. If every caller registered with a customer makes at least one call in one day then that customer 
 has "maximal usage" of the service. List the maximal customers for 2017-08-13.
 
@@ -131,3 +151,8 @@ JOIN Caller ON Customer.company_ref = Caller.company_ref
 JOIN caller_count_cte ON Customer.company_name = caller_count_cte.company_name
 GROUP BY company_name, caller_count
 HAVING caller_count = registered_callers
+
+Q: Consecutive calls occur when an operator deals with two callers within 10 minutes. Find the longest sequence of 
+consecutive calls – give the name of the operator and the first and last call date in the sequence.
+
+
