@@ -1,0 +1,88 @@
+This data is based on Microsoft's AdventureWorks database.
+
+Q: Show the first name and the email address of customer with CompanyName 'Bike World'.
+
+SELECT firstname, emailaddress
+FROM Customer
+WHERE companyname = "Bike World";
+
+Q: Show the CompanyName for all customers with an address in City 'Dallas'.
+
+SELECT companyname
+FROM Customer AS cust
+JOIN CustomerAddress AS custa ON cust.customerid = custa.customerid
+JOIN Address AS a ON custa.addressid = a.addressid
+WHERE city = "Dallas";
+
+Q: How many items with ListPrice more than $1000 have been sold?
+
+SELECT SUM(orderqty) AS Num_Sold
+FROM SalesOrderDetail
+WHERE productid IN (SELECT productid 
+                    FROM Product 
+                    WHERE listprice > 1000);
+
+Q: Give the CompanyName of those customers with orders over $100000. Include the subtotal plus tax plus freight.
+
+SELECT companyname
+FROM Customer AS c
+JOIN SalesOrderHeader AS soh ON c.customerid = soh.customerid
+WHERE commnt > 100000;
+
+Q: Find the number of left racing socks ('Racing Socks, L') ordered by CompanyName 'Riding Cycles'.
+
+SELECT SUM(orderqty) AS Num_Ordered
+FROM Customer AS c
+JOIN SalesOrderHeader AS soh ON c.customerid = soh.customerid
+JOIN SalesOrderDetail AS sod ON soh.salesorderid = sod.salesorderid 
+JOIN Product AS p ON sod.productid = p.productid
+WHERE companyname = "Riding Cycles" AND name = "Racing Socks, L";
+
+Q: A "Single Item Order" is a customer order where only one item is ordered. Show the SalesOrderID and the UnitPrice 
+for every Single Item Order.
+
+SELECT salesorderid, unitprice
+FROM SalesOrderDetail
+WHERE salesorderid IN (
+                       SELECT salesorderid
+                       FROM SalesOrderDetail
+                       GROUP BY salesorderid
+                       HAVING COUNT(productid) = 1
+                       );
+
+Q: Where did the racing socks go? List the product name and the CompanyName for all Customers who ordered ProductModel 
+'Racing Socks'.
+
+SELECT name, companyname
+FROM Product AS p
+RIGHT JOIN SalesOrderDetail AS sod ON p.productid = sod.productid
+JOIN SalesOrderHeader AS soh ON sod.salesorderid = soh.salesorderid 
+JOIN Customer AS c ON soh.customerid = c.customerid
+WHERE productmodelid = (SELECT productmodelid FROM ProductModel WHERE name LIKE "%Racing Socks%")
+
+Q: Show the product description for culture 'fr' for product with ProductID 736.
+
+SELECT description
+FROM ProductDescription AS pd 
+JOIN ProductModelProductDescription AS pmpd ON pd.productdescriptionid = pmpd.productdescriptionid
+JOIN ProductModel AS pm ON pmpd.productmodelid = pm.productmodelid
+JOIN Product AS p ON pm.productmodelid = p.productmodelid
+WHERE culture = "fr" AND productid = 736;
+
+Q: Use the SubTotal value in SaleOrderHeader to list orders from the largest to the smallest. For each order show the 
+CompanyName and the SubTotal and the total weight of the order.
+
+SELECT salesorderid, companyname, subtotal, freight
+FROM SalesOrderHeader AS soh
+LEFT JOIN Customer AS c ON soh.customerid = c.customerid
+ORDER BY subtotal DESC;
+
+Q: How many products in ProductCategory 'Cranksets' have been sold to an address in 'London'?
+
+SELECT SUM(orderqty) AS Num_Products 
+FROM Product AS p
+RIGHT JOIN SalesOrderDetail AS sod ON p.productid = sod.productid
+JOIN SalesOrderHeader AS soh ON sod.salesorderid = soh.salesorderid 
+LEFT JOIN Address AS a ON soh.billtoaddressid = a.addressid
+WHERE productcategoryid = (SELECT productcategoryid FROM ProductCategory WHERE name LIKE "%Cranksets%") 
+      AND city = "London";
