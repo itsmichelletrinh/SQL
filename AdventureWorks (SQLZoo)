@@ -86,3 +86,37 @@ JOIN SalesOrderHeader AS soh ON sod.salesorderid = soh.salesorderid
 LEFT JOIN Address AS a ON soh.billtoaddressid = a.addressid
 WHERE productcategoryid = (SELECT productcategoryid FROM ProductCategory WHERE name LIKE "%Cranksets%") 
       AND city = "London";
+
+Q: For every customer with a 'Main Office' in Dallas show AddressLine1 of the 'Main Office' and AddressLine1 of the 
+'Shipping' address - if there is no shipping address leave it blank. Use one row per customer.
+
+SELECT main_addresses.customerid, main, shipping
+FROM
+(
+SELECT customerid, addressline1 AS main
+FROM CustomerAddress AS ca
+JOIN Address AS a ON ca.addressid = a.addressid 
+WHERE addresstype = "Main Office" AND city = "Dallas"
+) AS main_addresses
+LEFT JOIN 
+(
+SELECT customerid, addressline1 AS shipping
+FROM Address AS a 
+JOIN CustomerAddress AS ca ON a.addressid = ca.addressid 
+WHERE addresstype = "Shipping"
+) AS shipping_addresses
+ON main_addresses.customerid = shipping_addresses.customerid
+
+Q: For each order show the SalesOrderID and SubTotal calculated three ways:
+A) From the SalesOrderHeader
+B) Sum of OrderQty*UnitPrice
+C) Sum of OrderQty*ListPrice
+
+SELECT soh.salesorderid, subtotal AS c1, SUM(orderqty*unitprice) AS c2, SUM(orderqty*listprice) AS c3
+FROM SalesOrderHeader AS soh 
+JOIN SalesOrderDetail AS sod ON soh.salesorderid = sod.salesorderid
+LEFT JOIN Product AS p ON sod.productid = p.productid
+GROUP BY salesorderid, c1
+
+Q: Show the best selling item by value.
+
