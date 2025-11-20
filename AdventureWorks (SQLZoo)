@@ -118,5 +118,88 @@ JOIN SalesOrderDetail AS sod ON soh.salesorderid = sod.salesorderid
 LEFT JOIN Product AS p ON sod.productid = p.productid
 GROUP BY salesorderid, c1
 
-Q: Show the best selling item by value.
+Q: Show how many orders are in the following ranges (in $):
+RANGE      Num Orders      Total Value
+0-99
+100-999
+1000-9999
+10000-
 
+SELECT
+    CASE 
+        WHEN commnt BETWEEN 0 AND 99 THEN '0-99'
+        WHEN commnt BETWEEN 100 AND 999 THEN '100-999'
+        WHEN commnt BETWEEN 1000 AND 9999 THEN '1000-9999'
+        WHEN commnt >= 10000 THEN '10000+'
+    END AS Num_Range,
+    COUNT(salesorderid) AS Num_Orders,
+    ROUND(SUM(commnt), 2) AS Total_Value
+FROM SalesOrderHeader
+GROUP BY
+    CASE 
+        WHEN commnt BETWEEN 0 AND 99 THEN '0-99'
+        WHEN commnt BETWEEN 100 AND 999 THEN '100-999'
+        WHEN commnt BETWEEN 1000 AND 9999 THEN '1000-9999'
+        WHEN commnt >= 10000 THEN '10000+'
+    END
+ORDER BY Num_Range ASC;
+
+Q: Identify the three most important cities. Show the break down of top level product category against city.
+
+-- Top 3 cities by dollar value (Woolston, London, Union City) 
+SELECT city, SUM(orderqty*unitprice) AS Total_Value
+FROM Address AS a
+LEFT JOIN SalesOrderHeader AS soh ON a.addressid = soh.billtoaddressid
+JOIN SalesOrderDetail AS sod ON soh.salesorderid = sod.salesorderid
+GROUP BY city
+ORDER BY Total_Value DESC
+LIMIT 3
+
+-- Breakdown of top level product categories by city dollar value and percentage of total value
+SELECT 
+      pc.name AS Product_Category, 
+      Woolston_Value, 
+      ROUND((Woolston_Value/SUM(orderqty*unitprice))*100, 2) AS Woolston_Percent,
+      London_Value, 
+      ROUND((London_Value/SUM(orderqty*unitprice))*100, 2) AS London_Percent,
+      UnionCity_Value, 
+      ROUND((UnionCity_Value/SUM(orderqty*unitprice))*100, 2) AS UnionCity_Percent,
+      SUM(orderqty*unitprice) AS Total_Value
+FROM ProductCategory AS pc
+LEFT JOIN 
+(
+SELECT pc.name, SUM(orderqty*unitprice) AS Woolston_Value
+FROM ProductCategory AS pc
+LEFT JOIN Product AS p ON pc.productcategoryid = p.productcategoryid
+LEFT JOIN SalesOrderDetail AS sod ON p.productid = sod.productid
+JOIN SalesOrderHeader AS soh ON sod.salesorderid = soh.salesorderid 
+JOIN Address AS a ON soh.billtoaddressid = a.addressid 
+WHERE city = "Woolston"
+GROUP BY pc.name
+) AS w ON pc.name = w.name
+LEFT JOIN 
+(
+SELECT pc.name, SUM(orderqty*unitprice) AS London_Value
+FROM ProductCategory AS pc
+LEFT JOIN Product AS p ON pc.productcategoryid = p.productcategoryid
+LEFT JOIN SalesOrderDetail AS sod ON p.productid = sod.productid
+JOIN SalesOrderHeader AS soh ON sod.salesorderid = soh.salesorderid 
+JOIN Address AS a ON soh.billtoaddressid = a.addressid 
+WHERE city = "London"
+GROUP BY pc.name
+) AS l ON pc.name = l.name
+LEFT JOIN 
+(
+SELECT pc.name, SUM(orderqty*unitprice) AS UnionCity_Value
+FROM ProductCategory AS pc
+LEFT JOIN Product AS p ON pc.productcategoryid = p.productcategoryid
+LEFT JOIN SalesOrderDetail AS sod ON p.productid = sod.productid
+JOIN SalesOrderHeader AS soh ON sod.salesorderid = soh.salesorderid 
+JOIN Address AS a ON soh.billtoaddressid = a.addressid 
+WHERE city = "Union City"
+GROUP BY pc.name
+) AS uc ON pc.name = uc.name
+LEFT JOIN Product AS p ON pc.productcategoryid = p.productcategoryid
+LEFT JOIN SalesOrderDetail AS sod ON p.productid = sod.productid
+GROUP BY pc.name, Woolston_Value, London_Value, UnionCity_Value
+ORDER BY Total_Value DESC
