@@ -203,3 +203,76 @@ LEFT JOIN Product AS p ON pc.productcategoryid = p.productcategoryid
 LEFT JOIN SalesOrderDetail AS sod ON p.productid = sod.productid
 GROUP BY pc.name, Woolston_Value, London_Value, UnionCity_Value
 ORDER BY Total_Value DESC
+
+Q: List the SalesOrderNumber for the customer 'Good Toys' 'Bike World'.
+
+SELECT companyname, salesorderid
+FROM Customer AS c
+JOIN SalesOrderHeader AS soh ON c.customerid = soh.customerid 
+WHERE companyname IN ("Good Toys", "Bike World");'
+
+Q: List the ProductName and the quantity of what was ordered by 'Futuristic Bikes'.
+
+SELECT name, orderqty
+FROM Product AS p
+JOIN SalesOrderDetail AS sod ON p.productid = sod.productid
+JOIN SalesOrderHeader AS soh ON sod.salesorderid = soh.salesorderid 
+JOIN Customer AS c ON soh.customerid = c.customerid 
+WHERE companyname = "Futuristic Bikes";
+
+Q: List the name and addresses of companies containing the word 'Bike' (upper or lower case) and companies 
+containing 'cycle' (upper or lower case). Ensure that the 'bike's are listed before the 'cycles's.
+
+SELECT companyname, addressline1
+FROM Customer AS c
+JOIN CustomerAddress AS ca ON c.customerid = ca.customerid 
+JOIN Address AS a ON ca.addressid = a.addressid
+WHERE UPPER(companyname) LIKE "%BIKE%"
+
+UNION
+
+SELECT companyname, addressline1
+FROM Customer AS c
+JOIN CustomerAddress AS ca ON c.customerid = ca.customerid 
+JOIN Address AS a ON ca.addressid = a.addressid
+WHERE UPPER(companyname) LIKE "%CYCLE%"
+
+Q: Show the total order value for each CountryRegion. List by value with the highest first.
+
+SELECT countyregion, ROUND(SUM(commnt), 2) AS Total_Order_Value
+FROM Address AS a
+LEFT JOIN SalesOrderHeader AS soh ON a.addressid = soh.billtoaddressid
+GROUP BY countyregion
+ORDER BY Total_Order_Value DESC;
+
+Q: Find the best customer in each region.
+
+SELECT countyregion, companyname, total_value 
+FROM
+(
+SELECT countyregion, companyname, ROUND(SUM(commnt), 2) AS total_value
+FROM Customer AS c
+JOIN SalesOrderHeader AS soh ON c.customerid = soh.customerid
+JOIN CustomerAddress AS ca ON c.customerid = ca.customerid 
+JOIN Address AS a ON ca.addressid = a.addressid
+WHERE countyregion = "United Kingdom"
+GROUP BY countyregion, companyname 
+ORDER BY SUM(commnt) DESC
+LIMIT 1
+) AS uk
+
+UNION ALL
+
+SELECT countyregion, companyname, total_value
+FROM 
+(
+SELECT countyregion, companyname, ROUND(SUM(commnt), 2) AS total_value
+FROM Customer AS c
+JOIN SalesOrderHeader AS soh ON c.customerid = soh.customerid
+JOIN CustomerAddress AS ca ON c.customerid = ca.customerid 
+JOIN Address AS a ON ca.addressid = a.addressid
+WHERE countyregion = "United States"
+GROUP BY countyregion, companyname 
+ORDER BY SUM(commnt) DESC
+LIMIT 1
+) AS us;
